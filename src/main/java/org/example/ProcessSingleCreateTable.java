@@ -1,12 +1,10 @@
 package org.example;
 
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.create.table.Index;
 
-import javax.xml.stream.events.Characters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -131,13 +129,14 @@ public class ProcessSingleCreateTable {
                 }
             }
             if (argument != null && argument.trim().length() != 0) {
-                if (postgreDataType.equalsIgnoreCase("bigint")
-                        || postgreDataType.equalsIgnoreCase("smallint")
-                        || postgreDataType.equalsIgnoreCase("int")
+                if (postgreDataType.toLowerCase().contains("int")
                 ) {
                     postgreDataType = postgreDataType;
+                } else if ("bit".equals(postgreDataType) && "1".equals(argument)) {
+                    postgreDataType = "bool";
                 } else {
                     postgreDataType = postgreDataType + "(" + argument + ")";
+
                 }
             }
 
@@ -149,6 +148,7 @@ public class ProcessSingleCreateTable {
                 // 是字符串的情况下，内容可能是数字，也可能不是
                 if (mysqlDefault.startsWith("'") && mysqlDefault.endsWith("'")){
                     mysqlDefault = mysqlDefault.replaceAll("'", "");
+                    specs.set(indexOfDefaultItem + 1, mysqlDefault);
                 }else {
                     // 不是字符串的话，一般就是mysql中的函数，此时要查找对应的pg函数
                     String postgreDefault = DefaultValueMapping.MYSQL_DEFAULT_TO_POSTGRE_DEFAULT.get(mysqlDefault);
